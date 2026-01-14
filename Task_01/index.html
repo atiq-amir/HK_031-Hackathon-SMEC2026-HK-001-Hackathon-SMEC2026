@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Pollution Checker</title>
+    <style>
+/* ---- ESSI “ORIGINAL” LOOK ---- */
+body{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    background: linear-gradient(135deg, #e0f7fa 0%, #bbdefb 100%);
+    min-height: 100vh;
+}
+
+h1{
+    text-align: center;
+    color: #006064;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+#app{
+    max-width: 500px;
+    margin: 0 auto;
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(8px);
+    padding: 28px;
+    border-radius: 18px;
+    box-shadow: 0 8px 20px rgba(0, 150, 136, .18);
+    border: 1px solid rgba(0, 150, 136, .15);
+}
+
+input[type="text"]{
+    width: calc(100% - 24px);
+    padding: 12px 12px;
+    font-size: 16px;
+    border: 1px solid #80deea;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #004d40;
+    transition: border .2s;
+}
+input[type="text"]:focus{
+    outline: none;
+    border-color: #00bcd4;
+}
+
+button{
+    padding: 10px 20px;
+    margin-top: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+
+    background: #00897b;
+    color: #fff;
+    transition: background .2s;
+}
+button:hover{background: #00695c;}
+
+#results{margin-top: 24px;}
+
+.pollutant{
+    margin: 6px 0;
+    padding: 6px 10px;
+    background: rgba(178, 223, 219, .3);
+    border-left: 4px solid #4db6ac;
+    border-radius: 4px;
+}
+
+.quality{
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    margin-top: 14px;
+}
+
+/* ------ color codes ------ */
+.Good       {background-color: #2e7d32;}
+.Fair       {background-color: #1565c0;}
+.Moderate   {background-color: #f9a825; color: #000;}
+.Poor       {background-color: #ef6c00;}
+.VeryPoor   {background-color: #c62828;}
+</style>
+</head>
+<body>
+    <h1>Air Pollution Checker</h1>
+    <div id="app">
+        <input type="text" id="cityInput" placeholder="Enter your city name">
+        <button onclick="getAirQuality()">Check Air Quality</button>
+        <button onclick="getAirQualityByLocation()">Use My Current Location</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const apiKey = "35f055c193b338e35f926214257ddbbe"; // Your API key
+
+        async function getAirQuality() {
+            const city = document.getElementById("cityInput").value.trim();
+            const resultsDiv = document.getElementById("results");
+
+            if (!city) {
+                resultsDiv.innerHTML = "Please enter a city name.";
+                return;
+            }
+
+            resultsDiv.innerHTML = "Loading...";
+
+            try {
+                // Get coordinates for the city
+                const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`);
+                const geoData = await geoRes.json();
+
+                if (!geoData || geoData.length === 0) {
+                    resultsDiv.innerHTML = "City not found.";
+                    return;
+                }
+
+                const { lat, lon } = geoData[0];
+                await fetchAndDisplayAirQuality(lat, lon);
+            } catch (err) {
+                resultsDiv.innerHTML = "Error fetching data.";
+                console.error(err);
+            }
+        }
+
+        async function getAirQualityByLocation() {
+            const resultsDiv = document.getElementById("results");
+            if (!navigator.geolocation) {
+                resultsDiv.innerHTML = "Geolocation is not supported by your browser.";
+                return;
+            }
+
+            resultsDiv.innerHTML = "Fetching your location...";
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                await fetchAndDisplayAirQuality(lat, lon);
+            }, (error) => {
+                resultsDiv.innerHTML = "Unable to retrieve your location.";
+                console.error(error);
+            });
+        }
+
+        async function fetchAndDisplayAirQuality(lat, lon) {
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "Loading air quality data...";
+
+            try {
+                const airRes = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`);
+                const airData = await airRes.json();
+                const c = airData.list[0].components;
+
+                const quality = getAirQualityLevel(c);
+
+                resultsDiv.innerHTML = `
+                    <div class="pollutant">SO2: ${c.so2} μg/m³</div>
+                    <div class="pollutant">NO2: ${c.no2} μg/m³</div>
+                    <div class="pollutant">PM10: ${c.pm10} μg/m³</div>
+                    <div class="pollutant">PM2.5: ${c.pm2_5} μg/m³</div>
+                    <div class="pollutant">O3: ${c.o3} μg/m³</div>
+                    <div class="pollutant">CO: ${c.co} μg/m³</div>
+                    <div class="quality ${quality.className}">Air Quality: ${quality.label}</div>
+                `;
+            } catch (err) {
+                resultsDiv.innerHTML = "Error fetching air pollution data.";
+                console.error(err);
+            }
+        }
+
+        function getAirQualityLevel(c) {
+            if (c.so2 <= 20 && c.no2 <= 40 && c.pm10 <= 20 && c.pm2_5 <= 10 && c.o3 <= 60 && c.co <= 4400) return { label: "Good", className: "Good" };
+            if (c.so2 <= 80 && c.no2 <= 70 && c.pm10 <= 50 && c.pm2_5 <= 25 && c.o3 <= 100 && c.co <= 9400) return { label: "Fair", className: "Fair" };
+            if (c.so2 <= 250 && c.no2 <= 150 && c.pm10 <= 100 && c.pm2_5 <= 50 && c.o3 <= 140 && c.co <= 12400) return { label: "Moderate", className: "Moderate" };
+            if (c.so2 <= 350 && c.no2 <= 200 && c.pm10 <= 200 && c.pm2_5 <= 75 && c.o3 <= 180 && c.co <= 15400) return { label: "Poor", className: "Poor" };
+            return { label: "Very Poor", className: "VeryPoor" };
+        }
+    </script>
+</body>
+</html>
