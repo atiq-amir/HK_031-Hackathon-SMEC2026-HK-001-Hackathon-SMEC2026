@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Product Price Comparison</title>
+<style>
+    :root {
+  --accent: #8b5cf6;
+  --accent-glow: rgba(139, 92, 246, 0.5);
+  --bg-gradient: linear-gradient(135deg, #f5f7ff 0%, #c3cfe2 100%);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --dark-bg: #0b0e14;
+  --dark-card: #161b22;
+  --dark-text: #e6edf3;
+  --success: #10b981;
+  --success-bg: rgba(16, 185, 129, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  margin: 0;
+  padding: 60px 20px;
+  transition: background 0.5s ease, color 0.5s ease;
+}
+
+body.dark-mode {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+h1 {
+  font-weight: 800;
+  letter-spacing: -1px;
+  text-align: center;
+  background: linear-gradient(to right, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 auto 40px;
+  max-width: 90%;
+}
+
+.input-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+input {
+  background: var(--card-bg);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 16px 22px;
+  width: 320px;
+  box-shadow: 0 10px 20px -4px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  font-size: 16px;
+  color: var(--text-main);
+}
+
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 24px var(--accent-glow);
+  width: 350px;
+  outline: none;
+}
+
+button {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  padding: 16px 32px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 20px -4px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-size: 16px;
+}
+
+button:hover {
+  transform: scale(1.05) translateY(-3px);
+  box-shadow: 0 15px 30px -5px rgba(139, 92, 246, 0.4);
+}
+
+button:active {
+  transform: scale(0.98) translateY(0);
+}
+
+#output {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 24px;
+  padding: 32px;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 20px 30px -8px rgba(0, 0, 0, 0.06);
+}
+
+body.dark-mode .card {
+  background: var(--dark-card);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 30px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+.best {
+  border: 2px solid var(--success);
+  background: var(--success-bg);
+}
+
+.best::before {
+  content: "WINNER";
+  position: absolute;
+  top: -12px;
+  left: 24px;
+  background: var(--success);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.price {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent);
+  margin-top: 16px;
+  display: block;
+}
+
+body.dark-mode .price {
+  color: #a78bfa;
+}
+
+#footerCredit {
+  margin-top: 80px;
+  opacity: 0.5;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 40px 16px;
+  }
+
+  input {
+    width: 100%;
+  }
+
+  input:focus {
+    width: 100%;
+  }
+
+  .input-wrapper {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  button {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Dark Mode Toggle -->
+<button id="darkToggle">🌙 Dark Mode</button>
+
+<h2>Product Price Comparison</h2>
+
+<input type="text" id="product" placeholder="Enter product name">
+<button onclick="comparePrice()">Search</button>
+
+<div id="output">
+    <!-- Placeholder cards initially -->
+    <div class="placeholder">Enter a product to see prices</div>
+    <div class="placeholder">Amazon, Daraz, eBay...</div>
+    <div class="placeholder">Best price will be highlighted</div>
+</div>
+
+<!-- Footer Credit -->
+<div id="footerCredit">
+    Designed & Developed by <b>Web Core</b>
+</div>
+
+<script>
+// --- Dark Mode Toggle ---
+const toggleBtn = document.getElementById("darkToggle");
+toggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    if(document.body.classList.contains("dark-mode")){
+        toggleBtn.textContent = "☀️ Light Mode";
+    } else {
+        toggleBtn.textContent = "🌙 Dark Mode";
+    }
+});
+
+// --- Compare Price Function ---
+function comparePrice() {
+    const product = document.getElementById("product").value;
+    const output = document.getElementById("output");
+    output.innerHTML = "";
+
+    if (product === "") {
+        alert("Please enter product name");
+        return;
+    }
+
+    const amazon = { site: "Amazon", price: (Math.random() * 50 + 200).toFixed(2) };
+    const daraz  = { site: "Daraz",  price: (Math.random() * 50 + 190).toFixed(2) };
+    const ebay   = { site: "eBay",   price: (Math.random() * 50 + 195).toFixed(2) };
+
+    const data = [amazon, daraz, ebay];
+
+    let best = data[0];
+    data.forEach(item => {
+        if (parseFloat(item.price) < parseFloat(best.price)) {
+            best = item;
+        }
+    });
+
+    data.forEach(item => {
+        output.innerHTML += `
+            <div class="card">
+                <h3>${item.site}</h3>
+                <p>Product: ${product}</p>
+                <p class="price">$${item.price}</p>
+            </div>
+        `;
+    });
+
+    output.innerHTML += `
+        <div class="card best">
+            <h2>BEST PRICE</h2>
+            <p>Website: <b>${best.site}</b></p>
+            <p class="price">$${best.price}</p>
+        </div>
+    `;
+}
+
+/* 
+This Product Price Comparison App is designed and developed by Web Core.
+*/
+</script>
+
+</body>
+</html>
